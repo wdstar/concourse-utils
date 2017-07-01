@@ -1,0 +1,119 @@
+---
+# $ fly -t target sp -p concourse-utils -c concourse.yml -l ~/credentials.yml
+resources:
+- name: src-git
+  type: git
+  source:
+    uri: https://github.com/wdstar/concourse-utils
+    #uri: https://gitlab.io.example.com/concourse/utils.git
+    skip_ssl_verification: true
+    branch: master
+- name: alpine
+  type: docker-image
+  source:
+    repository: alpine
+    tag: 3.6
+    registry_mirror: https://((registry-mirror-domain))
+    ca_certs:
+    - domain: ((registry-mirror-domain))
+      cert: ((docker-reg-ca-cert))
+- name: buildroot
+  type: docker-image
+  source:
+    repository: concourse/buildroot
+    tag: base
+    registry_mirror: https://((registry-mirror-domain))
+    ca_certs:
+    - domain: ((registry-mirror-domain))
+      cert: ((docker-reg-ca-cert))
+- name: centos
+  type: docker-image
+  source:
+    repository: centos
+    tag: 7
+    registry_mirror: https://((registry-mirror-domain))
+    ca_certs:
+    - domain: ((registry-mirror-domain))
+      cert: ((docker-reg-ca-cert))
+- name: debian
+  type: docker-image
+  source:
+    repository: debian
+    tag: 9
+    registry_mirror: https://((registry-mirror-domain))
+    ca_certs:
+    - domain: ((registry-mirror-domain))
+      cert: ((docker-reg-ca-cert))
+
+jobs:
+- name: install-ca-certs-tests
+  plan:
+  - get: src-git
+  - get: alpine
+  - task: alpine-test
+    image: alpine
+    params:
+      CA_CERTS: ((ca-certs))
+    config:
+      platform: linux
+      inputs:
+      - name: src-git
+      run:
+        #path: src-git/install-ca-certs/alpine.sh
+        path: /bin/sh
+        args:
+        - -c
+        - |
+          src-git/install-ca-certs/alpine.sh
+          tail /etc/ssl/certs/ca-certificates.crt
+  - get: buildroot
+  - task: buildroot-test
+    image: buildroot
+    params:
+      CA_CERTS: ((ca-certs))
+    config:
+      platform: linux
+      inputs:
+      - name: src-git
+      run:
+        #path: src-git/install-ca-certs/buildroot.sh
+        path: /bin/sh
+        args:
+        - -c
+        - |
+          src-git/install-ca-certs/buildroot.sh
+          tail /etc/ssl/certs/ca-certificates.crt
+  - get: centos
+  - task: centos-test
+    image: centos
+    params:
+      CA_CERTS: ((ca-certs))
+    config:
+      platform: linux
+      inputs:
+      - name: src-git
+      run:
+        #path: src-git/install-ca-certs/centos.sh
+        path: /bin/sh
+        args:
+        - -c
+        - |
+          src-git/install-ca-certs/centos.sh
+          tail /etc/pki/tls/certs/ca-bundle.crt
+  - get: debian
+  - task: debian-test
+    image: debian
+    params:
+      CA_CERTS: ((ca-certs))
+    config:
+      platform: linux
+      inputs:
+      - name: src-git
+      run:
+        #path: src-git/install-ca-certs/debian.sh
+        path: /bin/sh
+        args:
+        - -c
+        - |
+          src-git/install-ca-certs/debian.sh
+          tail /etc/ssl/certs/ca-certificates.crt
