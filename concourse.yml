@@ -8,6 +8,7 @@ resources:
     #uri: https://gitlab.io.example.com/concourse/utils.git
     skip_ssl_verification: true
     branch: master
+  #check_every: 1h  # default: 1m
 - name: alpine
   type: docker-image
   source:
@@ -17,6 +18,7 @@ resources:
     ca_certs:
     - domain: ((registry-mirror-domain))
       cert: ((docker-reg-ca-cert))
+  check_every: 12h  # default: 1m
 - name: buildroot
   type: docker-image
   source:
@@ -26,6 +28,7 @@ resources:
     ca_certs:
     - domain: ((registry-mirror-domain))
       cert: ((docker-reg-ca-cert))
+  check_every: 12h  # default: 1m
 - name: centos
   type: docker-image
   source:
@@ -35,6 +38,7 @@ resources:
     ca_certs:
     - domain: ((registry-mirror-domain))
       cert: ((docker-reg-ca-cert))
+  check_every: 12h  # default: 1m
 - name: debian
   type: docker-image
   source:
@@ -44,11 +48,14 @@ resources:
     ca_certs:
     - domain: ((registry-mirror-domain))
       cert: ((docker-reg-ca-cert))
+  check_every: 12h  # default: 1m
 
 jobs:
 - name: install-ca-certs-tests
   plan:
   - get: src-git
+    params:
+      depth: 5
   - get: alpine
   - task: alpine-test
     image: alpine
@@ -117,3 +124,35 @@ jobs:
         - |
           src-git/install-ca-certs/debian.sh
           tail /etc/ssl/certs/ca-certificates.crt
+- name: update-system-tests
+  plan:
+  - get: src-git
+    params:
+      depth: 5
+  - get: alpine
+  - task: alpine-test
+    image: alpine
+    config:
+      platform: linux
+      inputs:
+      - name: src-git
+      run:
+        path: src-git/update-system/alpine.sh
+  - get: centos
+  - task: centos-test
+    image: centos
+    config:
+      platform: linux
+      inputs:
+      - name: src-git
+      run:
+        path: src-git/update-system/centos.sh
+  - get: debian
+  - task: debian-test
+    image: debian
+    config:
+      platform: linux
+      inputs:
+      - name: src-git
+      run:
+        path: src-git/update-system/debian.sh

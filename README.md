@@ -5,6 +5,7 @@ Concourse Pipeline Utilities
 
 - [Utilities](#utilities)
     - [install-ca-certs](#install-ca-certs)
+    - [update-system](#update-system)
 - [License and Authors](#license-and-authors)
 
 ## Utilities
@@ -47,6 +48,43 @@ jobs:
       - name: src-git
       run:
         path: src-git/install-ca-certs/alpine.sh
+```
+
+### update-system
+
+System update scripts
+
+- `alpine.sh`: for the `alpine` image.
+- `centos.sh`: for the RHEL family.
+- `debian.sh`: for the Debian family.
+
+`concourse.yml`: Pipeline configuration example.
+
+```yaml
+---
+resources:
+- name: src-git
+  type: git
+  source:
+    uri: https://github.com/wdstar/concourse-utils.git
+    branch: master
+
+jobs:
+- name: update-system
+  plan:
+  - get: src-git
+  - task: on-alpine
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: alpine
+          tag: latest
+      inputs:
+      - name: src-git
+      run:
+        path: src-git/update-system/alpine.sh
 ```
 
 ## License and Authors
