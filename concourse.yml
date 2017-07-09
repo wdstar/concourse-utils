@@ -56,103 +56,112 @@ jobs:
   - get: src-git
     params:
       depth: 5
-  - get: alpine
-  - task: alpine-test
-    image: alpine
-    params:
-      CA_CERTS: ((ca-certs))
-    config:
-      platform: linux
-      inputs:
-      - name: src-git
-      run:
-        #path: src-git/install-ca-certs/alpine.sh
-        path: /bin/sh
-        args:
-        - -c
-        - |
-          src-git/install-ca-certs/alpine.sh
-          tail /etc/ssl/certs/ca-certificates.crt
-  - get: buildroot
-  - task: buildroot-test
-    image: buildroot
-    params:
-      CA_CERTS: ((ca-certs))
-    config:
-      platform: linux
-      inputs:
-      - name: src-git
-      run:
-        #path: src-git/install-ca-certs/buildroot.sh
-        path: /bin/sh
-        args:
-        - -c
-        - |
-          src-git/install-ca-certs/buildroot.sh
-          tail /etc/ssl/certs/ca-certificates.crt
-  - get: centos
-  - task: centos-test
-    image: centos
-    params:
-      CA_CERTS: ((ca-certs))
-    config:
-      platform: linux
-      inputs:
-      - name: src-git
-      run:
-        #path: src-git/install-ca-certs/centos.sh
-        path: /bin/sh
-        args:
-        - -c
-        - |
-          src-git/install-ca-certs/centos.sh
-          tail /etc/pki/tls/certs/ca-bundle.crt
-  - get: debian
-  - task: debian-test
-    image: debian
-    params:
-      CA_CERTS: ((ca-certs))
-    config:
-      platform: linux
-      inputs:
-      - name: src-git
-      run:
-        #path: src-git/install-ca-certs/debian.sh
-        path: /bin/sh
-        args:
-        - -c
-        - |
-          src-git/install-ca-certs/debian.sh
-          tail /etc/ssl/certs/ca-certificates.crt
+  - aggregate:
+    - do:
+      - get: alpine
+      - task: alpine-test
+        image: alpine
+        params:
+          CA_CERTS: ((ca-certs))
+        config:
+          platform: linux
+          inputs:
+          - name: src-git
+          run:
+            #path: src-git/install-ca-certs/alpine.sh
+            path: /bin/sh
+            args:
+            - -c
+            - |
+              src-git/install-ca-certs/alpine.sh
+              tail /etc/ssl/certs/ca-certificates.crt
+    - do:
+      - get: buildroot
+      - task: buildroot-test
+        image: buildroot
+        params:
+          CA_CERTS: ((ca-certs))
+        config:
+          platform: linux
+          inputs:
+          - name: src-git
+          run:
+            #path: src-git/install-ca-certs/buildroot.sh
+            path: /bin/sh
+            args:
+            - -c
+            - |
+              src-git/install-ca-certs/buildroot.sh
+              tail /etc/ssl/certs/ca-certificates.crt
+    - do:
+      - get: centos
+      - task: centos-test
+        image: centos
+        params:
+          CA_CERTS: ((ca-certs))
+        config:
+          platform: linux
+          inputs:
+          - name: src-git
+          run:
+            #path: src-git/install-ca-certs/centos.sh
+            path: /bin/sh
+            args:
+            - -c
+            - |
+              src-git/install-ca-certs/centos.sh
+              tail /etc/pki/tls/certs/ca-bundle.crt
+    - do:
+      - get: debian
+      - task: debian-test
+        image: debian
+        params:
+          CA_CERTS: ((ca-certs))
+        config:
+          platform: linux
+          inputs:
+          - name: src-git
+          run:
+            #path: src-git/install-ca-certs/debian.sh
+            path: /bin/sh
+            args:
+            - -c
+            - |
+              src-git/install-ca-certs/debian.sh
+              tail /etc/ssl/certs/ca-certificates.crt
 - name: update-system-tests
   plan:
   - get: src-git
     params:
       depth: 5
-  - get: alpine
-  - task: alpine-test
-    image: alpine
-    config:
-      platform: linux
-      inputs:
-      - name: src-git
-      run:
-        path: src-git/update-system/alpine.sh
-  - get: centos
-  - task: centos-test
-    image: centos
-    config:
-      platform: linux
-      inputs:
-      - name: src-git
-      run:
-        path: src-git/update-system/centos.sh
-  - get: debian
-  - task: debian-test
-    image: debian
-    config:
-      platform: linux
-      inputs:
-      - name: src-git
-      run:
-        path: src-git/update-system/debian.sh
+  - aggregate:
+    - do:
+      - get: alpine
+      - task: alpine-test
+        image: alpine
+        config:
+          platform: linux
+          inputs:
+          - name: src-git
+          run:
+            path: src-git/update-system/alpine.sh
+    - do:
+      - get: centos
+      - task: centos-test
+        image: centos
+        config:
+          platform: linux
+          inputs:
+          - name: src-git
+          run:
+            path: src-git/update-system/centos.sh
+    - do:
+      - get: debian
+      - task: debian-test
+        image: debian
+        config:
+          platform: linux
+          inputs:
+          - name: src-git
+          run:
+            path: src-git/update-system/debian.sh
