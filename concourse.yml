@@ -1,5 +1,5 @@
 ---
-# $ fly -t target sp -p concourse-utils -c concourse.yml -l ~/credentials.yml
+# $ fly -t target sp -p concourse-utils -c concourse.yml -l ~/sec/credentials-test.yml
 resources:
 - name: src-git
   type: git
@@ -43,7 +43,18 @@ resources:
   type: docker-image
   source:
     repository: debian
-    tag: 9
+    tag: stable-slim
+    #tag: 9
+    registry_mirror: https://((registry-mirror-domain))
+    ca_certs:
+    - domain: ((registry-mirror-domain))
+      cert: ((docker-reg-ca-cert))
+  check_every: 12h  # default: 1m
+- name: ubuntu
+  type: docker-image
+  source:
+    repository: ubuntu
+    tag: latest
     registry_mirror: https://((registry-mirror-domain))
     ca_certs:
     - domain: ((registry-mirror-domain))
@@ -129,6 +140,24 @@ jobs:
             - |
               src-git/install-ca-certs/debian.sh
               tail /etc/ssl/certs/ca-certificates.crt
+    - do:
+      - get: ubuntu
+      - task: ubuntu-test
+        image: ubuntu
+        params:
+          CA_CERTS: ((ca-certs))
+        config:
+          platform: linux
+          inputs:
+          - name: src-git
+          run:
+            #path: src-git/install-ca-certs/debian.sh
+            path: /bin/sh
+            args:
+            - -c
+            - |
+              src-git/install-ca-certs/debian.sh
+              tail /etc/ssl/certs/ca-certificates.crt
 - name: update-system-tests
   plan:
   - get: src-git
@@ -159,6 +188,16 @@ jobs:
       - get: debian
       - task: debian-test
         image: debian
+        config:
+          platform: linux
+          inputs:
+          - name: src-git
+          run:
+            path: src-git/update-system/debian.sh
+    - do:
+      - get: ubuntu
+      - task: ubuntu-test
+        image: ubuntu
         config:
           platform: linux
           inputs:
